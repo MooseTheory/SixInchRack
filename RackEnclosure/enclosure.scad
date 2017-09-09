@@ -2,6 +2,7 @@
 // It has the format required for a customizable project on Thingiverse
 // Note: Calculated variables does not show up in the customizer, hence the *1;
 
+// This variable tells OpenSCAD
 $fn = 50*1;
 
 // a:Extrusion no holes
@@ -25,23 +26,26 @@ Four_mm_screw = 3.8;
 //Hole size for 5mm screws or freedom unit equivalent
 Five_mm_screw = 4.8;
 
+center_hole_diameter = 4.8;
+side_hole_diameter = 3.8;
+
 //Constants, do not change!
-EXTERIOR_WIDTH   = 155*1;       // cm = 6"
-INTERIOR_WIDTH     = 155-20-20;   // 11.5cm between rails
-UNIT_HEIGHT      = (44.5/19)*6; // 1U = 14.05cm
-GAUGE     = 3*1;
-GAUGE_BOX = 2*1;
-SLIP      = 0.35*1;      // extra slip between parts
+EXTERIOR_WIDTH  = 155*1;       // cm = 6"
+INTERIOR_WIDTH  = 155-20-20;   // 11.5cm between rails
+UNIT_HEIGHT     = (44.5/19)*6; // 1U = 14.05cm
+GAUGE           = 3*1;
+GAUGE_BOX       = 2*1;
+SLIP            = 0.35*1;      // extra slip between parts
 
 go();
 
 module go() {
     if (part=="a") {
-        extrusion(Units,true,false,false);
+        extrusion(Units, true, false, false. center_hole_diameter. side_hole_diameter);
     } else if (part=="b") {
-        extrusion(Units,true,true,false);
+        extrusion(Units, true, true, false, center_hole_diameter, side_hole_diameter);
     } else if (part=="c") {
-        extrusion(Units,true,true,true);
+        extrusion(Units, true, true, true, center_hole_diameter, side_hole_diameter);
     } else if (part=="d") {
         rack_end(0);
     } else if (part=="e") {
@@ -234,7 +238,7 @@ module wedge() {
     }
 }
 
-module extrusion(u,center,front,side) {
+module extrusion(u, has_center_hole, has_front_holes, has_side_holes, center_hole_diameter, side_hole_diameter) {
     len=UNIT_HEIGHT*u;
     difference() {
         translate([0,2,2]) {
@@ -271,26 +275,26 @@ module extrusion(u,center,front,side) {
                 }
             }
         }
-        if(center) {
+        if(has_center_hole) {
             translate([-5,10,10]) {
                 rotate([0,90,0]) {
-                    cylinder(d=4.6,h=len+10);
+                    cylinder(d=center_hole_diameter,h=len+10);
                 }
             }
         }
         //holes
-        if(front) {
+        if(has_front_holes) {
             for(i=[0:30]) {
                 translate([UNIT_HEIGHT/2+i*UNIT_HEIGHT,10,-5]) {
-                    cylinder(d=3.8,h=30);
+                    cylinder(d=side_hole_diameter,h=30);
                 }
             }
         }
-        if(side) {
+        if(has_side_holes) {
             for(i=[0:30]) {
                 translate([UNIT_HEIGHT/2+i*UNIT_HEIGHT,25,10]) {
                     rotate([90,0,0]) {
-                        cylinder(d=3.8,h=30);
+                        cylinder(d=side_hole_diameter,h=30);
                     }
                 }
             }
