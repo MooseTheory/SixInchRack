@@ -16,18 +16,16 @@ $fn = 50*1;
 // i:Panel
 // j:Panel with handle
 // k:Handle
-part = "c";
+part = "k";
 
 Units = 3;
 
-//Hole size for 4mm screws or freedom unit equivalent
-Four_mm_screw = 3.8;
+m3_screw_diameter = 2.43;
+m4_screw_diameter = 3.22;
+m5_screw_diameter = 4.11;
 
-//Hole size for 5mm screws or freedom unit equivalent
-Five_mm_screw = 4.8;
-
-center_hole_diameter = 4.8;
-side_hole_diameter = 3.8;
+center_hole_diameter = m5_screw_diameter;
+side_hole_diameter = m3_screw_diameter;
 
 //Constants, do not change!
 EXTERIOR_WIDTH  = 155*1;       // cm = 6"
@@ -57,9 +55,9 @@ module go() {
     } else if (part=="h") {
         trap(Units);
     } else if (part=="i") {
-        sidepanel(Units,false);
+        sidepanel(Units, false);
     } else if (part=="j") {
-        sidepanel(Units,true);
+        sidepanel(Units, true);
     } else if (part=="k") {
         tophandle();
         translate([0,30,0]) {
@@ -97,7 +95,7 @@ module trap(u) {
         }
         for(i=[1:u]) {
             translate([0,UNIT_HEIGHT*i-UNIT_HEIGHT/2,-1]) {
-                cylinder(d=Four_mm_screw,h=10);
+                cylinder(d=m4_screw_diameter,h=10);
             }
         }
     }
@@ -182,11 +180,11 @@ module tophandle() {
         difference() {
             union() {
                 rotate([0,45,0]) {
-                    extrusion(4,false,false,false);
+                    extrusion_base(4,false,false,false);
                 }
                 translate([EXTERIOR_WIDTH,20,0]) {
                     rotate([0,45,180]) {
-                        extrusion(4,false,false,false);
+                        extrusion_base(4,false,false,false);
                     }
                 }
             }
@@ -203,7 +201,7 @@ module tophandle() {
         }
         intersection() {
             translate([0,0,-27.4]) {
-                extrusion(11,false,false,false);
+                extrusion_base(11,false,false,false);
             }
             wedge();
         }
@@ -239,74 +237,79 @@ module wedge() {
 }
 
 module extrusion(u, has_center_hole, has_front_holes, has_side_holes, center_hole_diameter, side_hole_diameter) {
-    len=UNIT_HEIGHT*u;
-    difference() {
-        translate([0,2,2]) {
-            minkowski() {
-                cube([len,16,16]);
-                sphere(d=4);
+    rotate(a = [270, 270, 0]) {
+        extrusion_base(u, has_center_hole, has_front_holes, has_side_holes, center_hole_diameter, side_hole_diameter);
+    }
+}
+
+module extrusion_base(u, has_center_hole, has_front_holes, has_side_holes, center_hole_diameter, side_hole_diameter) {difference() {
+    len = UNIT_HEIGHT * u;
+    translate([0,2,2]) {
+        minkowski() {
+            cube([len,16,16]);
+            sphere(d = 4);
+        }
+    }
+    translate([-5,10,1.99]) {
+        rotate([0,90,0]) {
+            linear_extrude(len+10) {
+                polygon(points=[[0,-2.5],[2,-4],[2,4],[0,2.5]]);
             }
         }
-        translate([-5,10,1.99]) {
+    }
+    translate([-5,10,18.01]) {
+        rotate([0,-90,180]) {
+            linear_extrude(len+10) {
+                polygon(points=[[0,-2.5],[2,-4],[2,4],[0,2.5]]);
+            }
+        }
+    }
+    translate([-5,18.01,10]) {
+        rotate([90,0,90]) {
+            linear_extrude(len+10) {
+                polygon(points=[[0,-2.5],[2,-4],[2,4],[0,2.5]]);
+            }
+        }
+    }
+    translate([-5,1.99,10]) {
+        rotate([-90,0,-90]) {
+            linear_extrude(len+10) {
+                polygon(points=[[0,-2.5],[2,-4],[2,4],[0,2.5]]);
+            }
+        }
+    }
+    if(has_center_hole) {
+        translate([-5,10,10]) {
             rotate([0,90,0]) {
-                linear_extrude(len+10) {
-                    polygon(points=[[0,-2.5],[2,-4],[2,4],[0,2.5]]);
-                }
+                cylinder(d=center_hole_diameter,h=len+10);
             }
         }
-        translate([-5,10,18.01]) {
-            rotate([0,-90,180]) {
-                linear_extrude(len+10) {
-                    polygon(points=[[0,-2.5],[2,-4],[2,4],[0,2.5]]);
-                }
+    }
+    //holes
+    if(has_front_holes) {
+        for(i=[0:30]) {
+            translate([UNIT_HEIGHT/2+i*UNIT_HEIGHT,10,-5]) {
+                cylinder(d=side_hole_diameter,h=30);
             }
         }
-        translate([-5,18.01,10]) {
-            rotate([90,0,90]) {
-                linear_extrude(len+10) {
-                    polygon(points=[[0,-2.5],[2,-4],[2,4],[0,2.5]]);
-                }
-            }
-        }
-        translate([-5,1.99,10]) {
-            rotate([-90,0,-90]) {
-                linear_extrude(len+10) {
-                    polygon(points=[[0,-2.5],[2,-4],[2,4],[0,2.5]]);
-                }
-            }
-        }
-        if(has_center_hole) {
-            translate([-5,10,10]) {
-                rotate([0,90,0]) {
-                    cylinder(d=center_hole_diameter,h=len+10);
-                }
-            }
-        }
-        //holes
-        if(has_front_holes) {
-            for(i=[0:30]) {
-                translate([UNIT_HEIGHT/2+i*UNIT_HEIGHT,10,-5]) {
+    }
+    if(has_side_holes) {
+        for(i=[0:30]) {
+            translate([UNIT_HEIGHT/2+i*UNIT_HEIGHT,25,10]) {
+                rotate([90,0,0]) {
                     cylinder(d=side_hole_diameter,h=30);
                 }
             }
         }
-        if(has_side_holes) {
-            for(i=[0:30]) {
-                translate([UNIT_HEIGHT/2+i*UNIT_HEIGHT,25,10]) {
-                    rotate([90,0,0]) {
-                        cylinder(d=side_hole_diameter,h=30);
-                    }
-                }
-            }
-        }
-        //length cutoff
-        translate([-2,0,0]) {
-            cube([4,60,60],center=true);
-        }
-        translate([len+2,0,0]) {
-            cube([4,60,60],center=true);
-        }
     }
+    //length cutoff
+    translate([-2,0,0]) {
+        cube([4,60,60],center=true);
+    }
+    translate([len+2,0,0]) {
+        cube([4,60,60],center=true);
+    }
+}
 }
 
 module screw() {
